@@ -1,134 +1,295 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RECOMENDACIONES BARILOCHE</title>
   <style>
     :root{
       --bg:#f5f5f2;
-      --card:#fff;
-      --accent:#c8b99c;
-      --border:#ddd;
+      --card:#ffffff;
       --text:#222;
+      --border:#ddd6c9;
+
+      --segment:#cdbfa6;   /* pill de segmento */
+      --thead:#e8e3d9;     /* fondo encabezado (un tono más oscuro) */
+      --row:#fefefe;
+      --row-border:#e7e1d6;
+      --link:#3b3bb3;
     }
+    *{box-sizing:border-box}
     body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);}
     .header{background:var(--bg);padding:20px;text-align:center;border-bottom:1px solid var(--border);}
-    .header h1{margin:0;font-size:22px;font-weight:600;}
+    .header .title{margin:0;font-size:22px;font-weight:600;}
     .container{padding:16px;max-width:1000px;margin:auto;}
-    .card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.08);margin-bottom:20px;}
-    .menu a{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;margin:8px 0;text-decoration:none;color:var(--text);background:var(--bg);border-radius:8px;font-size:16px;font-weight:500;transition:background .2s;}
-    .menu a:hover{background:#e9e9e4;}
-    h3.segment{background:var(--accent);color:#fff;padding:6px 12px;border-radius:6px;font-size:15px;font-weight:600;display:inline-block;margin:18px 0 10px 0;}
-    table{width:100%;border-collapse:collapse;margin-bottom:18px;border:1px solid var(--border);border-radius:10px;overflow:hidden;table-layout:fixed}
-    th,td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;font-size:15px;line-height:1.45;}
-    th{background:#e2e0da;text-align:left;font-weight:600;}
-    tr:last-child td{border-bottom:none;}
+    .card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.08);margin-bottom:20px;border:1px solid var(--border);}
+
+    /* Menú */
+    .menu a{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:14px 16px;margin:8px 0;text-decoration:none;color:var(--text);
+      background:var(--bg);border-radius:10px;font-size:16px;font-weight:600;
+      border:1px solid var(--border);
+      transition:background .2s;
+    }
+    .menu a:hover{background:#ece9e1}
+
+    .back{display:inline-block;margin-bottom:12px;text-decoration:none;color:#444;font-size:14px;cursor:pointer}
+
+    h2{margin:8px 0 12px 0;font-size:26px;letter-spacing:.5px}
+
+    /* Segmento */
+    .segment-pill{
+      display:inline-block;
+      background:var(--segment); color:#fff;
+      padding:8px 14px; border-radius:10px;
+      font-weight:700; letter-spacing:.6px; text-transform:uppercase;
+      margin:10px 0;
+    }
+
+    /* Tabla */
+    table{width:100%;border-collapse:collapse;margin:10px 0 18px;border:1px solid var(--border);border-radius:10px;overflow:hidden;table-layout:fixed;background:var(--row);}
+    thead th{
+      background:var(--thead);
+      text-align:left; font-weight:700; padding:12px 10px; font-size:15px;
+      border-bottom:1px solid var(--border);
+    }
+    td{
+      padding:10px; vertical-align:top; font-size:15px; line-height:1.45;
+      border-bottom:1px solid var(--row-border);
+      word-wrap:break-word; overflow-wrap:anywhere;
+    }
+    tr:last-child td{border-bottom:none}
+    a{color:var(--link)}
+
+    /* Buscador */
     .search{margin:12px 0;}
-    .search input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px}
-    .back{display:inline-block;margin-bottom:12px;text-decoration:none;color:#444;font-size:14px}
+    .search input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fff}
+
+    /* Mobile */
     @media(max-width:768px){
       table,thead,tbody,tr,th,td{display:block}
       thead{display:none}
       tr{margin-bottom:14px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px}
       td{border:none;padding:6px 8px;position:relative;font-size:14px}
-      td::before{content:attr(data-label);font-weight:600;display:block;margin-bottom:4px;color:#555;font-size:12px}
+      td::before{content:attr(data-label);font-weight:700;display:block;margin-bottom:4px;color:#4f4b43;font-size:12px}
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>RECOMENDACIONES BARILOCHE</h1>
+    <h1 class="title">RECOMENDACIONES BARILOCHE</h1>
   </div>
+
   <div class="container">
-    <div id="app" class="card"></div>
+    <div id="menu" class="card">
+      <div class="menu">
+        <a href="#GASTRONOMIA"><span class="label">GASTRONOMIA</span><span>›</span></a>
+        <a href="#PLAYAS"><span class="label">PLAYAS</span><span>›</span></a>
+        <a href="#EXCURSIONES"><span class="label">EXCURSIONES</span><span>›</span></a>
+      </div>
+      <div class="note">Hacé clic en cada sección para ver su tabla.</div>
+    </div>
+
+    <div id="content"></div>
   </div>
+
+  <div class="footer" style="text-align:center;font-size:12px;color:#666;padding:20px;">
+    Sitio generado con Google Sheets + GitHub Pages
+  </div>
+
   <script>
+    /* ===== CONFIG ===== */
     const SHEET_ID = "1Kr3AIdE6fl8rVtv9lWRprLMOSYtxhcSUDkeFES9AyIw";
+    const SHEETS = {
+      GASTRONOMIA: { gid:"1720586403", headers:["NOMBRE","UBICACION","IG","PRECIOS","COMENTARIOS"], colWidths:["24%","10%","12%","12%","42%"], segmentTitles:["ALMUERZO - CENA","DESAYUNO - MERIENDA","VILLA LA ANGOSTURA"] },
+      PLAYAS:      { gid:"1968374221", headers:["NOMBRE","UBICACION","COMENTARIOS"],                     colWidths:["28%","22%","50%"], segmentTitles:["BARILOCHE","VILLA LA ANGOSTURA"] },
+      EXCURSIONES: { gid:"222330063", headers:["NOMBRE","UBICACION","COMENTARIOS"],                     colWidths:["28%","22%","50%"], segmentTitles:["BARILOCHE"] }
+    };
     const urls = {
-      "GASTRONOMIA": `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1720586403`,
-      "PLAYAS": `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1968374221`,
-      "EXCURSIONES": `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=222330063`
-    };
-    const segments = {
-      "GASTRONOMIA": ["ALMUERZO - CENA","DESAYUNO - MERIENDA","VILLA LA ANGOSTURA"],
-      "PLAYAS": ["BARILOCHE","VILLA LA ANGOSTURA"],
-      "EXCURSIONES": ["BARILOCHE"]
-    };
-    const colWidths = {
-      "GASTRONOMIA": ["22%","15%","8%","13%","42%"], // más ancho IG, menos PRECIOS
-      "PLAYAS": ["28%","22%","50%"],
-      "EXCURSIONES": ["28%","22%","50%"]
+      GASTRONOMIA:`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEETS.GASTRONOMIA.gid}`,
+      PLAYAS:     `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEETS.PLAYAS.gid}`,
+      EXCURSIONES:`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEETS.EXCURSIONES.gid}`
     };
 
-    const app = document.getElementById("app");
-    function showMenu(){
-      app.innerHTML = `
-        <div class="menu">
-          <a href="#GASTRONOMIA"><span>GASTRONOMIA</span><span>›</span></a>
-          <a href="#PLAYAS"><span>PLAYAS</span><span>›</span></a>
-          <a href="#EXCURSIONES"><span>EXCURSIONES</span><span>›</span></a>
-        </div>
-      `;
+    /* ===== Utilidades ===== */
+    function esc(s){
+      return String(s==null?"":s)
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+        .replace(/'/g,"&#39;");
     }
-    async function showSection(name){
-      app.innerHTML = `<a href="#" class="back">← Volver al menú</a><h2>${name}</h2>
-        <div class="search"><input id="searchInput" type="search" placeholder="Buscar en todas las tablas..."></div>
-        <div id="tables">Cargando...</div>`;
-      document.querySelector(".back").onclick = e => { e.preventDefault(); showMenu(); }
-      try{
-        const resp = await fetch(urls[name]);
-        const text = await resp.text();
-        const rows = text.trim().split("\n").map(r=>r.split(","));
-        renderTables(name,rows);
-        document.getElementById("searchInput").addEventListener("input",filterTable);
-      }catch(err){
-        document.getElementById("tables").innerHTML = `<p style="color:red">Error al cargar datos</p>`;
-      }
-    }
-    function renderTables(sheet,rows){
-      const segTitles = segments[sheet];
-      const widths = colWidths[sheet]||[];
-      const headers = rows[0];
-      let html = "";
-      let current=[], currentTitle=null;
-      for(let i=1;i<rows.length;i++){
-        const row=rows[i].map(c=>c.trim());
-        if(row.filter(c=>c).length===1 && segTitles.includes(row[0])){
-          if(current.length){html+=makeTable(headers,current,currentTitle,widths);}
-          current=[]; currentTitle=row[0]; continue;
+
+    // Parser CSV robusto
+    function parseCSV(text){
+      const rows=[]; let row=[], cell="", quote=false;
+      for(let i=0;i<text.length;i++){
+        const ch=text[i], nx=text[i+1];
+        if(quote){
+          if(ch==='"' && nx==='"'){ cell+='"'; i++; }
+          else if(ch==='"'){ quote=false; }
+          else { cell+=ch; }
+        }else{
+          if(ch==='"'){ quote=true; }
+          else if(ch===','){ row.push(cell); cell=""; }
+          else if(ch==='\n'){ row.push(cell); rows.push(row); row=[]; cell=""; }
+          else if(ch!=='\r'){ cell+=ch; }
         }
-        current.push(row);
       }
-      if(current.length){html+=makeTable(headers,current,currentTitle||segTitles[0],widths);}
-      document.getElementById("tables").innerHTML=html;
+      row.push(cell); if(row.length) rows.push(row);
+      return rows.filter(r => r.some(c => String(c).trim()!==""));
     }
-    function makeTable(headers,rows,title,widths){
+
+    // Heurística: detectar fila de encabezados
+    function detectHeaderRow(rows, expectedHeaders){
+      const wanted = expectedHeaders.map(x=>x.toUpperCase());
+      const max = Math.min(rows.length, 80);
+      for(let r=0;r<max;r++){
+        const upper = rows[r].map(c => String(c||"").trim().toUpperCase());
+        const nonEmpty = upper.filter(x=>x!=="").length;
+        const hits = wanted.filter(w => upper.includes(w)).length;
+        if(hits >= 2) return r;
+        if(hits === 0 && nonEmpty >= 3 && r>0) return r; // fallback
+      }
+      return 0;
+    }
+
+    // Busca un título de segmento válido ANTES del encabezado
+    function findPreHeaderSegment(rows, headerRow, validTitles){
+      let found=null;
+      const set = validTitles.map(t=>t.toUpperCase());
+      for(let r=0;r<headerRow;r++){
+        const cells = rows[r];
+        let nonEmpty=0, last="";
+        for(const c of cells){
+          const s=String(c||"").trim();
+          if(s){ nonEmpty++; last=s; }
+        }
+        if(nonEmpty===1 && set.includes(last.toUpperCase())) found=last;
+      }
+      return found;
+    }
+
+    function isSegmentRow(cells, validTitles){
+      const set = validTitles.map(t=>t.toUpperCase());
+      let nonEmpty=0, last="";
+      for(const c of cells){
+        const s=String(c||"").trim();
+        if(s){ nonEmpty++; last=s; }
+      }
+      return (nonEmpty===1 && set.includes(last.toUpperCase())) ? last : null;
+    }
+
+    /* ===== Render ===== */
+    function makeTable(headers, rows, title, widths){
+      if(!rows || !rows.length) return ""; // no generes tablas vacías
       let colgroup="";
-      if(widths.length===headers.length){
+      if(widths && widths.length===headers.length){
         colgroup="<colgroup>"+widths.map(w=>`<col style="width:${w}">`).join("")+"</colgroup>";
       }
-      let thead="<thead><tr>"+headers.map(h=>`<th>${h}</th>`).join("")+"</tr></thead>";
+      const thead = "<thead><tr>"+headers.map(h=>`<th>${esc(h)}</th>`).join("")+"</tr></thead>";
       let tbody="<tbody>";
-      rows.forEach(r=>{
+      for(const r of rows){
+        // saltar filas que parecen encabezados duplicados
+        const rU=r.map(x=>String(x||"").trim().toUpperCase());
+        const hU=headers.map(x=>String(x||"").trim().toUpperCase());
+        let matches=0; for(let i=0;i<Math.min(rU.length,hU.length);i++){ if(rU[i] && rU[i]===hU[i]) matches++; }
+        if(matches >= Math.max(3, Math.floor(hU.length*0.6))) continue;
+
         tbody+="<tr>";
-        r.forEach((c,j)=>{tbody+=`<td data-label="${headers[j]}">${c}</td>`});
+        for(let j=0;j<headers.length;j++){
+          const label=esc(headers[j]||"");
+          const raw=r[j]||"";
+          const isUrl=/^https?:\/\//i.test(raw);
+          const val=esc(raw);
+          tbody+=`<td data-label="${label}">${isUrl?`<a href="${raw}" target="_blank" rel="noopener">${val}</a>`:val}</td>`;
+        }
         tbody+="</tr>";
-      });
+      }
       tbody+="</tbody>";
-      return `<h3 class="segment">${title}</h3><table>${colgroup}${thead}${tbody}</table>`;
+      return `<div class="segment-pill">${esc(title)}</div><table>${colgroup}${thead}${tbody}</table>`;
+    }
+
+    function buildSegmentedHTML(rows, cfg){
+      const headerRow = detectHeaderRow(rows, cfg.headers);
+      const header = rows[headerRow].map(v=>String(v||"").trim());
+
+      let html = `
+        <a class="back" onclick="showMenu()">← Volver al menú</a>
+        <h2>${esc(currentSection)}</h2>
+        <div class="search"><input id="searchInput" type="search" placeholder="Buscar en todas las tablas..." oninput="filterTable()"></div>
+      `;
+
+      let currentRows = [];
+      let currentTitle = findPreHeaderSegment(rows, headerRow, cfg.segmentTitles);
+
+      // Recorremos desde la fila posterior al encabezado
+      for(let r=headerRow+1; r<rows.length; r++){
+        const row = rows[r];
+        // descartar filas completamente vacías
+        if(row.every(c => String(c||"").trim()==="")) continue;
+
+        const maybeSeg = isSegmentRow(row, cfg.segmentTitles);
+        if(maybeSeg){
+          // volcamos lo acumulado (si hay)
+          if(currentRows.length){
+            html += makeTable(header, currentRows, currentTitle || cfg.segmentTitles[0], cfg.colWidths);
+            currentRows = [];
+          }
+          currentTitle = maybeSeg;
+          continue;
+        }
+        currentRows.push(row);
+      }
+
+      // último bloque
+      if(currentRows.length){
+        html += makeTable(header, currentRows, currentTitle || cfg.segmentTitles[0], cfg.colWidths);
+      }
+      return html;
+    }
+
+    /* ===== UI ===== */
+    function showMenu(){
+      document.getElementById("menu").style.display="block";
+      document.getElementById("content").innerHTML="";
+      history.replaceState(null,"",location.pathname+location.search);
+    }
+    async function showSection(name){
+      document.getElementById("menu").style.display="none";
+      document.getElementById("content").innerHTML="Cargando…";
+      const cfg = SHEETS[name];
+      try{
+        const res = await fetch(urls[name], { cache:'no-store' });
+        const text = await res.text();
+        const rows = parseCSV(text);
+        document.getElementById("content").innerHTML = buildSegmentedHTML(rows, cfg);
+      }catch(e){
+        document.getElementById("content").innerHTML = `<p style="color:#b00020">No pude leer la hoja. Asegurá acceso “Con enlace – Lector” o “Publicada en la web”.</p>`;
+      }
     }
     function filterTable(){
-      const val=document.getElementById("searchInput").value.toLowerCase();
+      const f = (document.getElementById("searchInput")?.value || "").toLowerCase();
       document.querySelectorAll("tbody tr").forEach(tr=>{
-        tr.style.display=tr.innerText.toLowerCase().includes(val)?"":"none";
+        tr.style.display = tr.innerText.toLowerCase().includes(f) ? "" : "none";
       });
     }
-    window.addEventListener("hashchange",()=>{
-      const p=location.hash.replace("#","");
-      if(!p) showMenu(); else showSection(p);
+
+    // Navegación
+    let currentSection = "";
+    window.addEventListener("hashchange", ()=>{
+      const h = location.hash.replace("#","");
+      currentSection = h;
+      if(SHEETS[h]) showSection(h); else showMenu();
     });
-    if(location.hash) showSection(location.hash.replace("#","")); else showMenu();
+    window.addEventListener("load", ()=>{
+      const h = location.hash.replace("#","");
+      currentSection = h;
+      if(SHEETS[h]) showSection(h); else showMenu();
+    });
+    // Exponer util para input
+    window.filterTable = filterTable;
+    window.showMenu = showMenu;
   </script>
 </body>
 </html>
