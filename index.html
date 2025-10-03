@@ -6,14 +6,10 @@
   <title>RECOMENDACIONES BARILOCHE</title>
   <style>
     :root{
-      --bg:#f5f5f2;
-      --card:#ffffff;
-      --text:#222;
+      --bg:#f5f5f2; --card:#ffffff; --text:#222;
       --border:#ddd6c9;
-
-      --segment:#cdbfa6;   /* pill de segmento */
-      --thead:#e8e3d9;     /* fondo encabezado (un tono más oscuro) */
-      --row:#fefefe;
+      --segment:#cdbfa6;     /* pill de segmento */
+      --thead:#e8e3d9;       /* encabezado tabla */
       --row-border:#e7e1d6;
       --link:#3b3bb3;
     }
@@ -35,20 +31,30 @@
     .menu a:hover{background:#ece9e1}
 
     .back{display:inline-block;margin-bottom:12px;text-decoration:none;color:#444;font-size:14px;cursor:pointer}
+    h2{margin:8px 0 10px 0;font-size:26px;letter-spacing:.5px}
 
-    h2{margin:8px 0 12px 0;font-size:26px;letter-spacing:.5px}
+    /* Botones de segmentos */
+    .seg-buttons{
+      display:flex; gap:8px; align-items:center;
+      flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; margin:6px 0 10px 0;
+    }
+    .seg-btn{
+      white-space:nowrap;
+      background:#e9e4da; border:1px solid var(--border);
+      padding:6px 10px; border-radius:999px; font-size:13px; font-weight:700;
+      cursor:pointer; user-select:none;
+    }
+    .seg-btn:hover{background:#e2dccf}
 
     /* Segmento */
     .segment-pill{
-      display:inline-block;
-      background:var(--segment); color:#fff;
-      padding:8px 14px; border-radius:10px;
-      font-weight:700; letter-spacing:.6px; text-transform:uppercase;
-      margin:10px 0;
+      display:inline-block; background:var(--segment); color:#fff;
+      padding:8px 14px; border-radius:10px; font-weight:700;
+      letter-spacing:.6px; text-transform:uppercase; margin:14px 0 8px 0;
     }
 
     /* Tabla */
-    table{width:100%;border-collapse:collapse;margin:10px 0 18px;border:1px solid var(--border);border-radius:10px;overflow:hidden;table-layout:fixed;background:var(--row);}
+    table{width:100%;border-collapse:collapse;margin:8px 0 18px;border:1px solid var(--border);border-radius:10px;overflow:hidden;table-layout:fixed;background:#fff;}
     thead th{
       background:var(--thead);
       text-align:left; font-weight:700; padding:12px 10px; font-size:15px;
@@ -66,8 +72,10 @@
     .search{margin:12px 0;}
     .search input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fff}
 
-    /* Mobile */
+    /* Mobile: tarjetas */
     @media(max-width:768px){
+      .seg-buttons{gap:6px}
+      .seg-btn{font-size:12px; padding:5px 10px}
       table,thead,tbody,tr,th,td{display:block}
       thead{display:none}
       tr{margin-bottom:14px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px}
@@ -82,6 +90,7 @@
   </div>
 
   <div class="container">
+    <!-- Menú -->
     <div id="menu" class="card">
       <div class="menu">
         <a href="#GASTRONOMIA"><span class="label">GASTRONOMIA</span><span>›</span></a>
@@ -91,6 +100,7 @@
       <div class="note">Hacé clic en cada sección para ver su tabla.</div>
     </div>
 
+    <!-- Contenido de sección -->
     <div id="content"></div>
   </div>
 
@@ -99,157 +109,187 @@
   </div>
 
   <script>
-    /* ===== CONFIG ===== */
+    /* ================= CONFIG ================= */
     const SHEET_ID = "1Kr3AIdE6fl8rVtv9lWRprLMOSYtxhcSUDkeFES9AyIw";
+
+    // Config por hoja: headers "esperados", anchos, títulos válidos y rótulos de botones
     const SHEETS = {
-      GASTRONOMIA: { gid:"1720586403", headers:["NOMBRE","UBICACION","IG","PRECIOS","COMENTARIOS"], colWidths:["24%","10%","12%","12%","42%"], segmentTitles:["ALMUERZO - CENA","DESAYUNO - MERIENDA","VILLA LA ANGOSTURA"] },
-      PLAYAS:      { gid:"1968374221", headers:["NOMBRE","UBICACION","COMENTARIOS"],                     colWidths:["28%","22%","50%"], segmentTitles:["BARILOCHE","VILLA LA ANGOSTURA"] },
-      EXCURSIONES: { gid:"222330063", headers:["NOMBRE","UBICACION","COMENTARIOS"],                     colWidths:["28%","22%","50%"], segmentTitles:["BARILOCHE"] }
-    };
-    const urls = {
-      GASTRONOMIA:`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEETS.GASTRONOMIA.gid}`,
-      PLAYAS:     `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEETS.PLAYAS.gid}`,
-      EXCURSIONES:`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEETS.EXCURSIONES.gid}`
-    };
-
-    /* ===== Utilidades ===== */
-    function esc(s){
-      return String(s==null?"":s)
-        .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;").replace(/"/g,"&quot;")
-        .replace(/'/g,"&#39;");
-    }
-
-    // Parser CSV robusto
-    function parseCSV(text){
-      const rows=[]; let row=[], cell="", quote=false;
-      for(let i=0;i<text.length;i++){
-        const ch=text[i], nx=text[i+1];
-        if(quote){
-          if(ch==='"' && nx==='"'){ cell+='"'; i++; }
-          else if(ch==='"'){ quote=false; }
-          else { cell+=ch; }
-        }else{
-          if(ch==='"'){ quote=true; }
-          else if(ch===','){ row.push(cell); cell=""; }
-          else if(ch==='\n'){ row.push(cell); rows.push(row); row=[]; cell=""; }
-          else if(ch!=='\r'){ cell+=ch; }
-        }
+      GASTRONOMIA: {
+        gid: "1720586403",
+        headers: ["NOMBRE","UBICACION","IG","PRECIOS","COMENTARIOS"],
+        colWidths: ["20%","10%","12%","16%","42%"],
+        segments: [
+          {title:"ALMUERZO - CENA", label:"ALMUERZO-CENA"},
+          {title:"DESAYUNO - MERIENDA", label:"DESAYUNO-MERIENDA"},
+          {title:"VILLA LA ANGOSTURA", label:"VLA"}
+        ]
+      },
+      PLAYAS: {
+        gid: "1968374221",
+        headers: ["NOMBRE","UBICACION","COMENTARIOS"],
+        colWidths: ["28%","22%","50%"],
+        segments: [
+          {title:"BARILOCHE", label:"BARILOCHE"},
+          {title:"VILLA LA ANGOSTURA", label:"VLA"}
+        ]
+      },
+      EXCURSIONES: {
+        gid: "222330063",
+        headers: ["NOMBRE","UBICACION","COMENTARIOS"],
+        colWidths: ["28%","22%","50%"],
+        segments: [
+          {title:"BARILOCHE", label:"BARILOCHE"}
+        ]
       }
-      row.push(cell); if(row.length) rows.push(row);
-      return rows.filter(r => r.some(c => String(c).trim()!==""));
+    };
+
+    /* ============== UTILIDADES ============== */
+    const esc = s => String(s==null?"":s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+
+    // Leer con GViz para obtener enlaces reales en "f" (formattedValue)
+    async function fetchGViz(gid){
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${gid}&tqx=out:json`;
+      const res = await fetch(url, {cache:"no-store"});
+      const txt = await res.text();
+      const json = JSON.parse(txt.replace(/^[^{]+/, "").replace(/;?}$/,""));
+      return json.table; // {cols:[...], rows:[{c:[{v, f}, ...]}]}
     }
 
-    // Heurística: detectar fila de encabezados
-    function detectHeaderRow(rows, expectedHeaders){
-      const wanted = expectedHeaders.map(x=>x.toUpperCase());
+    // Heurística de encabezado (fila que contiene varios de los headers esperados)
+    function detectHeaderRow(rows, expected){
+      const wanted = expected.map(x=>x.toUpperCase());
       const max = Math.min(rows.length, 80);
-      for(let r=0;r<max;r++){
-        const upper = rows[r].map(c => String(c||"").trim().toUpperCase());
+      for (let r=0; r<max; r++){
+        const upper = rows[r].map(c => String(c || "").trim().toUpperCase());
         const nonEmpty = upper.filter(x=>x!=="").length;
         const hits = wanted.filter(w => upper.includes(w)).length;
-        if(hits >= 2) return r;
-        if(hits === 0 && nonEmpty >= 3 && r>0) return r; // fallback
+        if (hits >= 2) return r;
+        if (hits === 0 && nonEmpty >= 3 && r>0) return r; // fallback
       }
       return 0;
     }
 
-    // Busca un título de segmento válido ANTES del encabezado
-    function findPreHeaderSegment(rows, headerRow, validTitles){
-      let found=null;
-      const set = validTitles.map(t=>t.toUpperCase());
-      for(let r=0;r<headerRow;r++){
-        const cells = rows[r];
-        let nonEmpty=0, last="";
-        for(const c of cells){
-          const s=String(c||"").trim();
-          if(s){ nonEmpty++; last=s; }
-        }
-        if(nonEmpty===1 && set.includes(last.toUpperCase())) found=last;
-      }
-      return found;
-    }
-
+    // ¿fila-título? (una sola celda con texto que coincide con algún título válido)
     function isSegmentRow(cells, validTitles){
-      const set = validTitles.map(t=>t.toUpperCase());
+      const set = validTitles.map(t => t.toUpperCase());
       let nonEmpty=0, last="";
-      for(const c of cells){
-        const s=String(c||"").trim();
-        if(s){ nonEmpty++; last=s; }
+      for (const c of cells){
+        const s = String(c || "").trim();
+        if (s){ nonEmpty++; last = s; }
       }
       return (nonEmpty===1 && set.includes(last.toUpperCase())) ? last : null;
     }
 
-    /* ===== Render ===== */
-    function makeTable(headers, rows, title, widths){
-      if(!rows || !rows.length) return ""; // no generes tablas vacías
-      let colgroup="";
-      if(widths && widths.length===headers.length){
-        colgroup="<colgroup>"+widths.map(w=>`<col style="width:${w}">`).join("")+"</colgroup>";
-      }
-      const thead = "<thead><tr>"+headers.map(h=>`<th>${esc(h)}</th>`).join("")+"</tr></thead>";
-      let tbody="<tbody>";
-      for(const r of rows){
-        // saltar filas que parecen encabezados duplicados
-        const rU=r.map(x=>String(x||"").trim().toUpperCase());
-        const hU=headers.map(x=>String(x||"").trim().toUpperCase());
-        let matches=0; for(let i=0;i<Math.min(rU.length,hU.length);i++){ if(rU[i] && rU[i]===hU[i]) matches++; }
-        if(matches >= Math.max(3, Math.floor(hU.length*0.6))) continue;
+    // Slug para anchors
+    const slug = s => s.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9\-]/g,"");
 
-        tbody+="<tr>";
-        for(let j=0;j<headers.length;j++){
-          const label=esc(headers[j]||"");
-          const raw=r[j]||"";
-          const isUrl=/^https?:\/\//i.test(raw);
-          const val=esc(raw);
-          tbody+=`<td data-label="${label}">${isUrl?`<a href="${raw}" target="_blank" rel="noopener">${val}</a>`:val}</td>`;
-        }
-        tbody+="</tr>";
-      }
-      tbody+="</tbody>";
-      return `<div class="segment-pill">${esc(title)}</div><table>${colgroup}${thead}${tbody}</table>`;
+    /* ============== RENDER ============== */
+    function buildButtons(section){
+      const cfg = SHEETS[section];
+      const btns = cfg.segments.map(seg =>
+        `<button class="seg-btn" onclick="scrollToSeg('${slug(seg.title)}')">${esc(seg.label)}</button>`
+      ).join("");
+      return `<div class="seg-buttons">${btns}</div>`;
     }
 
-    function buildSegmentedHTML(rows, cfg){
-      const headerRow = detectHeaderRow(rows, cfg.headers);
-      const header = rows[headerRow].map(v=>String(v||"").trim());
+    // Convierte la tabla GViz a arrays de strings/HTML preservando links (usa f si trae <a>)
+    function gvizToRows(table){
+      const rows = table.rows.map(r =>
+        (r.c || []).map(cell => {
+          const f = cell && cell.f;
+          const v = cell && cell.v;
+          // Si el formateado trae <a ...> lo usamos tal cual (preserva hipervínculos)
+          if (f && /<a\s/i.test(f)) return f;
+          // Si el valor es URL puro, autolink
+          if (typeof v === "string" && /^https?:\/\//i.test(v)) return `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a>`;
+          return esc(v==null?"":String(v));
+        })
+      );
+      return rows;
+    }
 
+    function makeTable(headers, rows, title, widths){
+      if (!rows || !rows.length) return "";
+      // colgroup con anchos fijos por hoja
+      const colgroup = (widths && widths.length===headers.length)
+        ? "<colgroup>"+widths.map(w=>`<col style="width:${w}">`).join("")+"</colgroup>" : "";
+
+      const thead = "<thead><tr>"+headers.map(h=>`<th>${esc(h)}</th>`).join("")+"</tr></thead>";
+
+      let tbody = "<tbody>";
+      for (const r of rows){
+        // filtrar headers duplicados dentro del bloque
+        const rU = r.map(x => String(x).replace(/<[^>]+>/g,"").trim().toUpperCase());
+        const hU = headers.map(x => String(x).trim().toUpperCase());
+        let matches=0; for (let i=0;i<Math.min(rU.length,hU.length);i++){ if(rU[i] && rU[i]===hU[i]) matches++; }
+        if (matches >= Math.max(3, Math.floor(hU.length*0.6))) continue;
+
+        tbody += "<tr>";
+        for (let j=0; j<headers.length; j++){
+          const label = esc(headers[j] || "");
+          const html  = r[j] || "";
+          tbody += `<td data-label="${label}">${html}</td>`;
+        }
+        tbody += "</tr>";
+      }
+      tbody += "</tbody>";
+
+      const anchor = slug(title);
+      return `<div id="seg-${anchor}" class="segment-pill">${esc(title)}</div>
+              <table>${colgroup}${thead}${tbody}</table>`;
+    }
+
+    function buildSegmentedHTML(allRows, section){
+      const cfg = SHEETS[section];
+      const validTitles = cfg.segments.map(s=>s.title);
+
+      // Detectar encabezado real
+      const headerRow = detectHeaderRow(allRows, cfg.headers);
+      const header = allRows[headerRow].map(v => String(v || "").trim());
+
+      // Botonera
       let html = `
         <a class="back" onclick="showMenu()">← Volver al menú</a>
-        <h2>${esc(currentSection)}</h2>
+        <h2>${esc(section)}</h2>
+        ${buildButtons(section)}
         <div class="search"><input id="searchInput" type="search" placeholder="Buscar en todas las tablas..." oninput="filterTable()"></div>
       `;
 
+      // Recorrer filas y segmentar
       let currentRows = [];
-      let currentTitle = findPreHeaderSegment(rows, headerRow, cfg.segmentTitles);
+      let currentTitle = null;
 
-      // Recorremos desde la fila posterior al encabezado
-      for(let r=headerRow+1; r<rows.length; r++){
-        const row = rows[r];
-        // descartar filas completamente vacías
-        if(row.every(c => String(c||"").trim()==="")) continue;
+      // ¿había un título de segmento antes del header?
+      for (let r=0; r<headerRow; r++){
+        const maybe = isSegmentRow(allRows[r], validTitles);
+        if (maybe) currentTitle = maybe;
+      }
 
-        const maybeSeg = isSegmentRow(row, cfg.segmentTitles);
-        if(maybeSeg){
-          // volcamos lo acumulado (si hay)
-          if(currentRows.length){
-            html += makeTable(header, currentRows, currentTitle || cfg.segmentTitles[0], cfg.colWidths);
+      for (let r=headerRow+1; r<allRows.length; r++){
+        const row = allRows[r];
+        // Saltar filas vacías
+        if (row.every(c => String(c).replace(/<[^>]+>/g,"").trim()==="")) continue;
+
+        const maybe = isSegmentRow(row, validTitles);
+        if (maybe){
+          if (currentRows.length){
+            html += makeTable(header, currentRows, currentTitle || validTitles[0], cfg.colWidths);
             currentRows = [];
           }
-          currentTitle = maybeSeg;
+          currentTitle = maybe;
           continue;
         }
         currentRows.push(row);
       }
-
-      // último bloque
-      if(currentRows.length){
-        html += makeTable(header, currentRows, currentTitle || cfg.segmentTitles[0], cfg.colWidths);
+      if (currentRows.length){
+        html += makeTable(header, currentRows, currentTitle || validTitles[0], cfg.colWidths);
       }
       return html;
     }
 
-    /* ===== UI ===== */
+    /* ============== UI ============== */
     function showMenu(){
       document.getElementById("menu").style.display="block";
       document.getElementById("content").innerHTML="";
@@ -258,14 +298,14 @@
     async function showSection(name){
       document.getElementById("menu").style.display="none";
       document.getElementById("content").innerHTML="Cargando…";
-      const cfg = SHEETS[name];
       try{
-        const res = await fetch(urls[name], { cache:'no-store' });
-        const text = await res.text();
-        const rows = parseCSV(text);
-        document.getElementById("content").innerHTML = buildSegmentedHTML(rows, cfg);
+        const table = await fetchGViz(SHEETS[name].gid);
+        const rows  = gvizToRows(table);         // preserva <a href="...">
+        const html  = buildSegmentedHTML(rows, name);
+        document.getElementById("content").innerHTML = html;
       }catch(e){
-        document.getElementById("content").innerHTML = `<p style="color:#b00020">No pude leer la hoja. Asegurá acceso “Con enlace – Lector” o “Publicada en la web”.</p>`;
+        document.getElementById("content").innerHTML =
+          `<p style="color:#b00020">No pude leer la hoja. Asegurá acceso “Con enlace – Lector” o “Publicada en la web”.</p>`;
       }
     }
     function filterTable(){
@@ -274,22 +314,25 @@
         tr.style.display = tr.innerText.toLowerCase().includes(f) ? "" : "none";
       });
     }
+    // Scroll a segmento
+    window.scrollToSeg = function(sl){
+      const el = document.getElementById("seg-"+sl);
+      if (el) el.scrollIntoView({behavior:"smooth", block:"start"});
+    };
 
-    // Navegación
-    let currentSection = "";
+    // Router
     window.addEventListener("hashchange", ()=>{
       const h = location.hash.replace("#","");
-      currentSection = h;
-      if(SHEETS[h]) showSection(h); else showMenu();
+      if (SHEETS[h]) showSection(h); else showMenu();
     });
     window.addEventListener("load", ()=>{
       const h = location.hash.replace("#","");
-      currentSection = h;
-      if(SHEETS[h]) showSection(h); else showMenu();
+      if (SHEETS[h]) showSection(h); else showMenu();
     });
-    // Exponer util para input
+
+    // Exponer para el input
     window.filterTable = filterTable;
-    window.showMenu = showMenu;
+    window.showMenu    = showMenu;
   </script>
 </body>
 </html>
