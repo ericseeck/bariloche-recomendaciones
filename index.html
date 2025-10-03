@@ -112,7 +112,6 @@
     /* ================= CONFIG ================= */
     const SHEET_ID = "1Kr3AIdE6fl8rVtv9lWRprLMOSYtxhcSUDkeFES9AyIw";
 
-    // Config por hoja: headers "esperados", anchos, títulos válidos y rótulos de botones
     const SHEETS = {
       GASTRONOMIA: {
         gid: "1720586403",
@@ -143,26 +142,88 @@
       }
     };
 
-    /* ============== UTILIDADES ============== */
     const esc = s => String(s==null?"":s)
       .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
       .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 
-    // Leer con GViz para obtener enlaces reales en "f" (formattedValue)
+    /* ======== Carga: GViz con fallback CSV ======== */
+
     async function fetchGViz(gid){
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${gid}&tqx=out:json`;
       const res = await fetch(url, {cache:"no-store"});
       const txt = await res.text();
+      // quita "/*O_o*/ google.visualization.Query.setResponse(...)" y deja JSON
       const json = JSON.parse(txt.replace(/^[^{]+/, "").replace(/;?}$/,""));
-      return json.table; // {cols:[...], rows:[{c:[{v, f}, ...]}]}
+      return json.table; // {cols, rows}
     }
 
-    // Heurística de encabezado (fila que contiene varios de los headers esperados)
+    function gvizToRows(table){
+      return table.rows.map(r =>
+        (r.c || []).map(cell => {
+          const f = cell && cell.f;
+          const v = cell && cell.v;
+          if (f && /<a\s/i.test(f)) return f; // mantiene <a href="...">
+          if (typeof v === "string" && /^https?:\/\//i.test(v)) {
+            return `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a>`;
+          }
+          return esc(v==null?"":String(v));
+        })
+      );
+    }
+
+    function parseCSV(text){
+      const rows=[]; let row=[], cell="", quote=false;
+      for(let i=0;i<text.length;i++){
+        const ch=text[i], nx=text[i+1];
+        if(quote){
+          if(ch==='"' && nx==='"'){ cell+='"'; i++; }
+          else if(ch==='"'){ quote=false; }
+          else { cell+=ch; }
+        }else{
+          if(ch==='"'){ quote=true; }
+          else if(ch===','){ row.push(cell); cell=""; }
+          else if(ch==='\n'){ row.push(cell); rows.push(row); row=[]; cell=""; }
+          else if(ch!=='\r'){ cell+=ch; }
+        }
+      }
+      row.push(cell); if(row.length) rows.push(row);
+      return rows.filter(r => r.some(c => String(c).trim()!==""));
+    }
+
+    function autoLinkVisibleUrls(rows){
+      return rows.map(r => r.map(c => {
+        if (/<a\s/i.test(c)) return c;
+        if (/^https?:\/\/\S+$/i.test(c)) {
+          return `<a href="${c}" target="_blank" rel="noopener">${c}</a>`;
+        }
+        return c;
+      }));
+    }
+
+    async function loadSheetTable(sectionCfg){
+      // 1) probar GViz
+      try{
+        const table = await fetchGViz(sectionCfg.gid);
+        const rows  = gvizToRows(table);
+        return { rows, via: "gviz" };
+      }catch(_){
+        // 2) fallback CSV
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${sectionCfg.gid}`;
+        const res = await fetch(csvUrl, { cache: "no-store" });
+        if (!res.ok) throw new Error("CSV HTTP " + res.status);
+        const text = await res.text();
+        const rows = parseCSV(text).map(r => r.map(c => esc(c)));
+        return { rows: autoLinkVisibleUrls(rows), via: "csv" };
+      }
+    }
+
+    /* ======== Segmentación y render ======== */
+
     function detectHeaderRow(rows, expected){
       const wanted = expected.map(x=>x.toUpperCase());
       const max = Math.min(rows.length, 80);
       for (let r=0; r<max; r++){
-        const upper = rows[r].map(c => String(c || "").trim().toUpperCase());
+        const upper = rows[r].map(c => String(c || "").replace(/<[^>]+>/g,"").trim().toUpperCase());
         const nonEmpty = upper.filter(x=>x!=="").length;
         const hits = wanted.filter(w => upper.includes(w)).length;
         if (hits >= 2) return r;
@@ -171,21 +232,18 @@
       return 0;
     }
 
-    // ¿fila-título? (una sola celda con texto que coincide con algún título válido)
     function isSegmentRow(cells, validTitles){
       const set = validTitles.map(t => t.toUpperCase());
       let nonEmpty=0, last="";
       for (const c of cells){
-        const s = String(c || "").trim();
+        const s = String(c || "").replace(/<[^>]+>/g,"").trim();
         if (s){ nonEmpty++; last = s; }
       }
       return (nonEmpty===1 && set.includes(last.toUpperCase())) ? last : null;
     }
 
-    // Slug para anchors
     const slug = s => s.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9\-]/g,"");
 
-    /* ============== RENDER ============== */
     function buildButtons(section){
       const cfg = SHEETS[section];
       const btns = cfg.segments.map(seg =>
@@ -194,33 +252,15 @@
       return `<div class="seg-buttons">${btns}</div>`;
     }
 
-    // Convierte la tabla GViz a arrays de strings/HTML preservando links (usa f si trae <a>)
-    function gvizToRows(table){
-      const rows = table.rows.map(r =>
-        (r.c || []).map(cell => {
-          const f = cell && cell.f;
-          const v = cell && cell.v;
-          // Si el formateado trae <a ...> lo usamos tal cual (preserva hipervínculos)
-          if (f && /<a\s/i.test(f)) return f;
-          // Si el valor es URL puro, autolink
-          if (typeof v === "string" && /^https?:\/\//i.test(v)) return `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a>`;
-          return esc(v==null?"":String(v));
-        })
-      );
-      return rows;
-    }
-
     function makeTable(headers, rows, title, widths){
       if (!rows || !rows.length) return "";
-      // colgroup con anchos fijos por hoja
       const colgroup = (widths && widths.length===headers.length)
         ? "<colgroup>"+widths.map(w=>`<col style="width:${w}">`).join("")+"</colgroup>" : "";
-
       const thead = "<thead><tr>"+headers.map(h=>`<th>${esc(h)}</th>`).join("")+"</tr></thead>";
 
       let tbody = "<tbody>";
       for (const r of rows){
-        // filtrar headers duplicados dentro del bloque
+        // saltar headers duplicados
         const rU = r.map(x => String(x).replace(/<[^>]+>/g,"").trim().toUpperCase());
         const hU = headers.map(x => String(x).trim().toUpperCase());
         let matches=0; for (let i=0;i<Math.min(rU.length,hU.length);i++){ if(rU[i] && rU[i]===hU[i]) matches++; }
@@ -245,11 +285,10 @@
       const cfg = SHEETS[section];
       const validTitles = cfg.segments.map(s=>s.title);
 
-      // Detectar encabezado real
       const headerRow = detectHeaderRow(allRows, cfg.headers);
-      const header = allRows[headerRow].map(v => String(v || "").trim());
+      const header = allRows[headerRow].map(v => String(v || "").replace(/<[^>]+>/g,"").trim());
 
-      // Botonera
+      // UI: back + título + botones + buscador
       let html = `
         <a class="back" onclick="showMenu()">← Volver al menú</a>
         <h2>${esc(section)}</h2>
@@ -257,19 +296,17 @@
         <div class="search"><input id="searchInput" type="search" placeholder="Buscar en todas las tablas..." oninput="filterTable()"></div>
       `;
 
-      // Recorrer filas y segmentar
-      let currentRows = [];
+      // ¿Hay un segmento antes del header?
       let currentTitle = null;
-
-      // ¿había un título de segmento antes del header?
       for (let r=0; r<headerRow; r++){
         const maybe = isSegmentRow(allRows[r], validTitles);
         if (maybe) currentTitle = maybe;
       }
 
+      let currentRows = [];
       for (let r=headerRow+1; r<allRows.length; r++){
         const row = allRows[r];
-        // Saltar filas vacías
+        // fila completamente vacía
         if (row.every(c => String(c).replace(/<[^>]+>/g,"").trim()==="")) continue;
 
         const maybe = isSegmentRow(row, validTitles);
@@ -289,7 +326,7 @@
       return html;
     }
 
-    /* ============== UI ============== */
+    /* ============== UI / Router ============== */
     function showMenu(){
       document.getElementById("menu").style.display="block";
       document.getElementById("content").innerHTML="";
@@ -297,15 +334,17 @@
     }
     async function showSection(name){
       document.getElementById("menu").style.display="none";
-      document.getElementById("content").innerHTML="Cargando…";
+      const cont = document.getElementById("content");
+      cont.innerHTML="Cargando…";
       try{
-        const table = await fetchGViz(SHEETS[name].gid);
-        const rows  = gvizToRows(table);         // preserva <a href="...">
-        const html  = buildSegmentedHTML(rows, name);
-        document.getElementById("content").innerHTML = html;
+        const { rows } = await loadSheetTable(SHEETS[name]);
+        cont.innerHTML = buildSegmentedHTML(rows, name);
       }catch(e){
-        document.getElementById("content").innerHTML =
-          `<p style="color:#b00020">No pude leer la hoja. Asegurá acceso “Con enlace – Lector” o “Publicada en la web”.</p>`;
+        cont.innerHTML = `<p style="color:#b00020">
+          No pude leer la hoja (ni GViz ni CSV). Verificá:
+          <br>• La planilla está en “Cualquiera con el enlace – Lector”.
+          <br>• (Opcional) “Archivo → Publicar en la web”.
+        </p>`;
       }
     }
     function filterTable(){
@@ -314,13 +353,11 @@
         tr.style.display = tr.innerText.toLowerCase().includes(f) ? "" : "none";
       });
     }
-    // Scroll a segmento
     window.scrollToSeg = function(sl){
       const el = document.getElementById("seg-"+sl);
       if (el) el.scrollIntoView({behavior:"smooth", block:"start"});
     };
 
-    // Router
     window.addEventListener("hashchange", ()=>{
       const h = location.hash.replace("#","");
       if (SHEETS[h]) showSection(h); else showMenu();
@@ -330,7 +367,6 @@
       if (SHEETS[h]) showSection(h); else showMenu();
     });
 
-    // Exponer para el input
     window.filterTable = filterTable;
     window.showMenu    = showMenu;
   </script>
