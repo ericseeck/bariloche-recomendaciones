@@ -146,17 +146,17 @@
       .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
       .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 
-    /* ======== Carga: GViz con fallback CSV ======== */
+    /* ======== Carga con triple fallback: GViz -> PubHTML -> CSV ======== */
 
+    // 1) GViz (devuelve JSON; mantiene <a href> en cell.f)
     async function fetchGViz(gid){
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${gid}&tqx=out:json`;
       const res = await fetch(url, {cache:"no-store"});
+      if (!res.ok) throw new Error("GViz HTTP " + res.status);
       const txt = await res.text();
-      // quita "/*O_o*/ google.visualization.Query.setResponse(...)" y deja JSON
       const json = JSON.parse(txt.replace(/^[^{]+/, "").replace(/;?}$/,""));
       return json.table; // {cols, rows}
     }
-
     function gvizToRows(table){
       return table.rows.map(r =>
         (r.c || []).map(cell => {
@@ -171,6 +171,29 @@
       );
     }
 
+    // 2) PubHTML (requiere “Archivo → Publicar en la web”; preserva links)
+    async function fetchPubHTML(gid){
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pubhtml?gid=${gid}&single=true&widget=false&headers=false`;
+      const res = await fetch(url, {cache:"no-store"});
+      if (!res.ok) throw new Error("PubHTML HTTP " + res.status);
+      const html = await res.text();
+      // Parsear la primera tabla
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const table = doc.querySelector("table");
+      if (!table) throw new Error("No table in pubhtml");
+      const rows = [];
+      table.querySelectorAll("tr").forEach(tr=>{
+        const r=[];
+        tr.querySelectorAll("td,th").forEach(td=>{
+          r.push(td.innerHTML.trim()); // mantiene <a href>
+        });
+        rows.push(r);
+      });
+      // filtrar filas vacías
+      return rows.filter(r => r.some(c => c && c.replace(/<[^>]+>/g,"").trim()!==""));
+    }
+
+    // 3) CSV (última opción; autolink de URLs visibles)
     function parseCSV(text){
       const rows=[]; let row=[], cell="", quote=false;
       for(let i=0;i<text.length;i++){
@@ -189,32 +212,35 @@
       row.push(cell); if(row.length) rows.push(row);
       return rows.filter(r => r.some(c => String(c).trim()!==""));
     }
-
     function autoLinkVisibleUrls(rows){
       return rows.map(r => r.map(c => {
-        if (/<a\s/i.test(c)) return c;
-        if (/^https?:\/\/\S+$/i.test(c)) {
-          return `<a href="${c}" target="_blank" rel="noopener">${c}</a>`;
+        const s = String(c||"");
+        if (/<a\s/i.test(s)) return s;
+        if (/^https?:\/\/\S+$/i.test(s)) {
+          return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
         }
-        return c;
+        return esc(s);
       }));
     }
 
     async function loadSheetTable(sectionCfg){
-      // 1) probar GViz
+      // 1) GViz
       try{
         const table = await fetchGViz(sectionCfg.gid);
-        const rows  = gvizToRows(table);
-        return { rows, via: "gviz" };
-      }catch(_){
-        // 2) fallback CSV
-        const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${sectionCfg.gid}`;
-        const res = await fetch(csvUrl, { cache: "no-store" });
-        if (!res.ok) throw new Error("CSV HTTP " + res.status);
-        const text = await res.text();
-        const rows = parseCSV(text).map(r => r.map(c => esc(c)));
-        return { rows: autoLinkVisibleUrls(rows), via: "csv" };
-      }
+        return { rows: gvizToRows(table), via: "gviz" };
+      }catch(_){}
+      // 2) PubHTML (si está publicado)
+      try{
+        const rows = await fetchPubHTML(sectionCfg.gid);
+        return { rows, via: "pubhtml" };
+      }catch(_){}
+      // 3) CSV
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${sectionCfg.gid}`;
+      const res = await fetch(csvUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error("CSV HTTP " + res.status);
+      const text = await res.text();
+      const rows = autoLinkVisibleUrls(parseCSV(text));
+      return { rows, via: "csv" };
     }
 
     /* ======== Segmentación y render ======== */
@@ -288,7 +314,6 @@
       const headerRow = detectHeaderRow(allRows, cfg.headers);
       const header = allRows[headerRow].map(v => String(v || "").replace(/<[^>]+>/g,"").trim());
 
-      // UI: back + título + botones + buscador
       let html = `
         <a class="back" onclick="showMenu()">← Volver al menú</a>
         <h2>${esc(section)}</h2>
@@ -296,7 +321,6 @@
         <div class="search"><input id="searchInput" type="search" placeholder="Buscar en todas las tablas..." oninput="filterTable()"></div>
       `;
 
-      // ¿Hay un segmento antes del header?
       let currentTitle = null;
       for (let r=0; r<headerRow; r++){
         const maybe = isSegmentRow(allRows[r], validTitles);
@@ -306,7 +330,6 @@
       let currentRows = [];
       for (let r=headerRow+1; r<allRows.length; r++){
         const row = allRows[r];
-        // fila completamente vacía
         if (row.every(c => String(c).replace(/<[^>]+>/g,"").trim()==="")) continue;
 
         const maybe = isSegmentRow(row, validTitles);
@@ -341,9 +364,9 @@
         cont.innerHTML = buildSegmentedHTML(rows, name);
       }catch(e){
         cont.innerHTML = `<p style="color:#b00020">
-          No pude leer la hoja (ni GViz ni CSV). Verificá:
-          <br>• La planilla está en “Cualquiera con el enlace – Lector”.
-          <br>• (Opcional) “Archivo → Publicar en la web”.
+          No pude leer la hoja (GViz/PubHTML/CSV). Verificá:
+          <br>• Permiso “Cualquier persona con el enlace – Lector”.
+          <br>• (Recomendado) “Archivo → Publicar en la web”.
         </p>`;
       }
     }
