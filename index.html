@@ -56,7 +56,7 @@
     </div>
 
     <!-- Contenido dinámico -->
-    <div id="content"></div>
+    <div id="content">Cargando...</div>
   </div>
 
   <div class="footer" style="text-align:center;font-size:12px;color:#666;padding:20px;">Sitio generado con Google Sheets + GitHub Pages</div>
@@ -64,9 +64,10 @@
   <!-- =================== JS =================== -->
   <script>
     /* ===== CONFIG ===== */
-    // API base (sin ?sheet=)
+    // API base (sin ?sheet=) — si cambia el deployment de Apps Script, actualizá esta URL:
     const API_URL = 'https://script.google.com/macros/s/AKfycbxavgGWY0dQcLOsaVfqII0DkQb-Tb5kqKfhsx2hRBvpdTwS_jrp3g4XSUSC5X2XBxxo1w/exec';
 
+    // Definición de hojas, anchos y nombres de segmentos/botones
     const SHEETS = {
       GASTRONOMIA: {
         colWidths: ['20%','10%','12%','16%','42%'],
@@ -89,29 +90,20 @@
       }
     };
 
+    /* ===== Utilidades ===== */
     function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
     function slug(s){return s.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'');}
 
-    /* ===== API ===== */
-    async function fetchSheet(section){
-      const url = API_URL + '?sheet=' + encodeURIComponent(section);
-      const res = await fetch(url, {cache:'no-store'});
-      if(!res.ok) throw new Error('API '+res.status);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      return data; // {headers, rows}
-    }
-
-    /* ===== Helpers ===== */
+    // Detecta filas-título de segmento (exact match con lista válida)
     function isSegmentRow(row, validTitles){
       let nonEmpty = 0, last = '';
-      for (var i=0;i<row.length;i++){
-        var s = String(row[i]||'').replace(/<[^>]+>/g,'').trim();
+      for (let i=0;i<row.length;i++){
+        const s = String(row[i]||'').replace(/<[^>]+>/g,'').trim();
         if (s){ nonEmpty++; last = s; }
       }
       if (nonEmpty===1){
-        var up = last.toUpperCase();
-        for (var j=0;j<validTitles.length;j++){
+        const up = last.toUpperCase();
+        for (let j=0;j<validTitles.length;j++){
           if (up === validTitles[j].toUpperCase()) return last;
         }
       }
@@ -119,9 +111,9 @@
     }
 
     function buildButtons(section){
-      var segs = SHEETS[section].segments;
-      var html = '<div class="seg-buttons">';
-      for (var i=0;i<segs.length;i++){
+      const segs = SHEETS[section].segments;
+      let html = '<div class="seg-buttons">';
+      for (let i=0;i<segs.length;i++){
         html += '<button class="seg-btn" onclick="scrollToSeg(\''+slug(segs[i].title)+'\')">'+esc(segs[i].label)+'</button>';
       }
       html += '</div>';
@@ -130,65 +122,64 @@
 
     function makeTable(headers, rows, title, widths){
       if (!rows || !rows.length) return '';
-      var colgroup = '';
+      let colgroup = '';
       if (widths && widths.length===headers.length){
         colgroup = '<colgroup>';
-        for (var i=0;i<widths.length;i++){ colgroup += '<col style="width:'+widths[i]+'">'; }
+        for (let i=0;i<widths.length;i++){ colgroup += '<col style="width:'+widths[i]+'">'; }
         colgroup += '</colgroup>';
       }
-      var thead = '<thead><tr>';
-      for (var h=0; h<headers.length; h++){ thead += '<th>'+esc(headers[h])+'</th>'; }
+      let thead = '<thead><tr>';
+      for (let h=0; h<headers.length; h++){ thead += '<th>'+esc(headers[h])+'</th>'; }
       thead += '</tr></thead>';
 
-      var tbody = '<tbody>';
-      for (var r=0;r<rows.length;r++){
-        // evitar headers duplicados
-        var dup=0;
-        for (var c=0;c<headers.length && c<rows[r].length;c++){
-          var cellTxt = String(rows[r][c]).replace(/<[^>]+>/g,'').trim().toUpperCase();
+      let tbody = '<tbody>';
+      for (let r=0;r<rows.length;r++){
+        // evitar headers duplicados que vengan en los datos
+        let dup=0;
+        for (let c=0;c<headers.length && c<rows[r].length;c++){
+          const cellTxt = String(rows[r][c]).replace(/<[^>]+>/g,'').trim().toUpperCase();
           if (cellTxt && cellTxt === String(headers[c]).trim().toUpperCase()) dup++;
         }
         if (dup >= Math.max(3, Math.floor(headers.length*0.6))) continue;
 
         tbody += '<tr>';
-        for (var j=0; j<headers.length; j++){
-          var label = esc(headers[j]||'');
-          var html  = rows[r][j] || '';
+        for (let j=0; j<headers.length; j++){
+          const label = esc(headers[j]||'');
+          const html  = rows[r][j] || '';
           tbody += '<td data-label="'+label+'">'+ html +'</td>';
         }
         tbody += '</tr>';
       }
       tbody += '</tbody>';
 
-      var anchor = 'seg-'+slug(title);
+      const anchor = 'seg-'+slug(title);
       return '<div id="'+anchor+'" class="segment-pill">'+esc(title)+'</div>' +
              '<table>'+ colgroup + thead + tbody + '</table>';
     }
 
     function buildSectionHTML(section, headers, allRows){
-      var cfg = SHEETS[section];
-      var validTitles = [];
-      for (var i=0;i<cfg.segments.length;i++) validTitles.push(cfg.segments[i].title);
+      const cfg = SHEETS[section];
+      const validTitles = cfg.segments.map(s => s.title);
 
-      var html  = '<a class="back" onclick="showMenu()">← Volver al menú</a>';
+      let html  = '<a class="back" onclick="showMenu()">← Volver al menú</a>';
       html     += '<h2>'+esc(section)+'</h2>';
       html     += buildButtons(section);
       html     += '<div class="search"><input id="searchInput" type="search" placeholder="Buscar en todas las tablas..." oninput="filterTable()"></div>';
 
-      var currentTitle = null;
-      var currentRows = [];
+      let currentTitle = null;
+      let currentRows = [];
 
-      for (var r=0; r<allRows.length; r++){
+      for (let r=0; r<allRows.length; r++){
         // descartar filas vacías
-        var nonEmpty = 0;
-        for (var k=0;k<allRows[r].length;k++){
-          var s = String(allRows[r][k]||'').replace(/<[^>]+>/g,'').trim();
+        let nonEmpty = 0;
+        for (let k=0;k<allRows[r].length;k++){
+          const s = String(allRows[r][k]||'').replace(/<[^>]+>/g,'').trim();
           if (s) nonEmpty++;
         }
         if (nonEmpty===0) continue;
 
         // ¿fila-segmento?
-        var maybe = isSegmentRow(allRows[r], validTitles);
+        const maybe = isSegmentRow(allRows[r], validTitles);
         if (maybe){
           if (currentRows.length){
             html += makeTable(headers, currentRows, currentTitle || validTitles[0], cfg.colWidths);
@@ -206,6 +197,46 @@
       return html;
     }
 
+    /* ===== Cache navegador + precarga ===== */
+    const memCache = {};
+    function cacheKey(section){ return 'sheet_' + section; }
+    function getCached(section){
+      if (memCache[section]) return memCache[section];
+      const raw = sessionStorage.getItem(cacheKey(section));
+      if (!raw) return null;
+      try { return (memCache[section] = JSON.parse(raw)); } catch(e){ return null; }
+    }
+    function setCached(section, data){
+      memCache[section] = data;
+      try { sessionStorage.setItem(cacheKey(section), JSON.stringify(data)); } catch(e){}
+    }
+
+    async function fetchSheet(section){
+      // 1) cache en memoria / sessionStorage
+      const c = getCached(section);
+      if (c) return c;
+
+      // 2) red → API (tu Apps Script)
+      const url = API_URL + '?sheet=' + encodeURIComponent(section);
+      const res = await fetch(url, { cache:'no-store' });
+      if (!res.ok) throw new Error('API '+res.status);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      setCached(section, data);
+      return data;
+    }
+
+    // Precalienta las otras secciones en segundo plano
+    function prewarm(afterSection){
+      const all = Object.keys(SHEETS);
+      all.filter(s => s !== afterSection).forEach(s => {
+        if (!getCached(s)){
+          fetchSheet(s).catch(()=>{ /* ignorar */ });
+        }
+      });
+    }
+
     /* ===== UI / Router ===== */
     function showMenu(){
       document.getElementById('menu').style.display='block';
@@ -215,34 +246,36 @@
 
     async function showSection(name){
       document.getElementById('menu').style.display='none';
-      var cont = document.getElementById('content');
+      const cont = document.getElementById('content');
       cont.innerHTML = 'Cargando…';
       try{
-        var data = await fetchSheet(name);  // {headers, rows}
+        const data = await fetchSheet(name);        // ← usa cache si existe
         cont.innerHTML = buildSectionHTML(name, data.headers, data.rows);
+        prewarm(name);                              // ← precarga las otras
       }catch(e){
-        cont.innerHTML = '<p style="color:#b00020">No pude leer la hoja desde la API. Verificá que tu implementación Web App esté pública (Cualquiera) y que la URL /exec es correcta.<br><br>'+esc(e.message)+'</p>';
+        cont.innerHTML = '<p style="color:#b00020">No pude leer la hoja desde la API. '
+          + 'Verificá que la Web App esté pública y la URL sea correcta.<br><br>'
+          + esc(e.message) + '</p>';
       }
     }
 
     function filterTable(){
-      var f = (document.getElementById('searchInput')?.value || '').toLowerCase();
-      var trs = document.querySelectorAll('tbody tr');
-      for (var i=0;i<trs.length;i++){
-        trs[i].style.display = trs[i].innerText.toLowerCase().indexOf(f)>=0 ? '' : 'none';
-      }
+      const f = (document.getElementById('searchInput')?.value || '').toLowerCase();
+      document.querySelectorAll('tbody tr').forEach(tr=>{
+        tr.style.display = tr.innerText.toLowerCase().includes(f) ? '' : 'none';
+      });
     }
     window.scrollToSeg = function(sl){
-      var el = document.getElementById('seg-'+sl);
+      const el = document.getElementById('seg-'+sl);
       if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
     };
 
-    window.addEventListener('hashchange', function(){
-      var h = location.hash.replace('#','');
+    window.addEventListener('hashchange', ()=>{
+      const h = location.hash.replace('#','');
       if (SHEETS[h]) showSection(h); else showMenu();
     });
-    window.addEventListener('load', function(){
-      var h = location.hash.replace('#','');
+    window.addEventListener('load', ()=>{
+      const h = location.hash.replace('#','');
       if (SHEETS[h]) showSection(h); else showMenu();
     });
 
