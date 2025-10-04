@@ -7,11 +7,8 @@
   <style>
     :root{
       --bg:#f5f5f2; --card:#ffffff; --text:#222;
-      --border:#ddd6c9;
-      --segment:#cdbfa6;     /* pill de segmento */
-      --thead:#e8e3d9;       /* encabezado tabla */
-      --row-border:#e7e1d6;
-      --link:#3b3bb3;
+      --border:#ddd6c9; --segment:#cdbfa6; --thead:#e8e3d9;
+      --row-border:#e7e1d6; --link:#3b3bb3;
     }
     *{box-sizing:border-box}
     body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);}
@@ -19,63 +16,23 @@
     .header .title{margin:0;font-size:22px;font-weight:600;}
     .container{padding:16px;max-width:1000px;margin:auto;}
     .card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.08);margin-bottom:20px;border:1px solid var(--border);}
-
-    /* Menú */
-    .menu a{
-      display:flex;justify-content:space-between;align-items:center;
-      padding:14px 16px;margin:8px 0;text-decoration:none;color:var(--text);
-      background:var(--bg);border-radius:10px;font-size:16px;font-weight:600;
-      border:1px solid var(--border);
-      transition:background .2s;
-    }
+    .menu a{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;margin:8px 0;text-decoration:none;color:var(--text);background:var(--bg);border-radius:10px;font-size:16px;font-weight:600;border:1px solid var(--border);transition:background .2s;}
     .menu a:hover{background:#ece9e1}
-
     .back{display:inline-block;margin-bottom:12px;text-decoration:none;color:#444;font-size:14px;cursor:pointer}
     h2{margin:8px 0 10px 0;font-size:26px;letter-spacing:.5px}
-
-    /* Botones de segmentos */
-    .seg-buttons{
-      display:flex; gap:8px; align-items:center;
-      flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; margin:6px 0 10px 0;
-    }
-    .seg-btn{
-      white-space:nowrap;
-      background:#e9e4da; border:1px solid var(--border);
-      padding:6px 10px; border-radius:999px; font-size:13px; font-weight:700;
-      cursor:pointer; user-select:none;
-    }
+    .seg-buttons{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;margin:6px 0 10px}
+    .seg-btn{white-space:nowrap;background:#e9e4da;border:1px solid var(--border);padding:6px 10px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer}
     .seg-btn:hover{background:#e2dccf}
-
-    /* Segmento */
-    .segment-pill{
-      display:inline-block; background:var(--segment); color:#fff;
-      padding:8px 14px; border-radius:10px; font-weight:700;
-      letter-spacing:.6px; text-transform:uppercase; margin:14px 0 8px 0;
-    }
-
-    /* Tabla */
+    .segment-pill{display:inline-block;background:var(--segment);color:#fff;padding:8px 14px;border-radius:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin:14px 0 8px}
     table{width:100%;border-collapse:collapse;margin:8px 0 18px;border:1px solid var(--border);border-radius:10px;overflow:hidden;table-layout:fixed;background:#fff;}
-    thead th{
-      background:var(--thead);
-      text-align:left; font-weight:700; padding:12px 10px; font-size:15px;
-      border-bottom:1px solid var(--border);
-    }
-    td{
-      padding:10px; vertical-align:top; font-size:15px; line-height:1.45;
-      border-bottom:1px solid var(--row-border);
-      word-wrap:break-word; overflow-wrap:anywhere;
-    }
+    thead th{background:var(--thead);text-align:left;font-weight:700;padding:12px 10px;font-size:15px;border-bottom:1px solid var(--border)}
+    td{padding:10px;vertical-align:top;font-size:15px;line-height:1.45;border-bottom:1px solid var(--row-border);word-wrap:break-word;overflow-wrap:anywhere}
     tr:last-child td{border-bottom:none}
     a{color:var(--link)}
-
-    /* Buscador */
     .search{margin:12px 0;}
     .search input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fff}
-
-    /* Mobile: tarjetas */
     @media(max-width:768px){
-      .seg-buttons{gap:6px}
-      .seg-btn{font-size:12px; padding:5px 10px}
+      .seg-btn{font-size:12px;padding:5px 10px}
       table,thead,tbody,tr,th,td{display:block}
       thead{display:none}
       tr{margin-bottom:14px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px}
@@ -85,12 +42,8 @@
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1 class="title">RECOMENDACIONES BARILOCHE</h1>
-  </div>
-
+  <div class="header"><h1 class="title">RECOMENDACIONES BARILOCHE</h1></div>
   <div class="container">
-    <!-- Menú -->
     <div id="menu" class="card">
       <div class="menu">
         <a href="#GASTRONOMIA"><span class="label">GASTRONOMIA</span><span>›</span></a>
@@ -99,22 +52,16 @@
       </div>
       <div class="note">Hacé clic en cada sección para ver su tabla.</div>
     </div>
-
-    <!-- Contenido de sección -->
     <div id="content"></div>
   </div>
-
-  <div class="footer" style="text-align:center;font-size:12px;color:#666;padding:20px;">
-    Sitio generado con Google Sheets + GitHub Pages
-  </div>
+  <div class="footer" style="text-align:center;font-size:12px;color:#666;padding:20px;">Sitio generado con Google Sheets + GitHub Pages</div>
 
   <script>
-    /* ================= CONFIG ================= */
-    const SHEET_ID = "1Kr3AIdE6fl8rVtv9lWRprLMOSYtxhcSUDkeFES9AyIw";
+    /*** PONÉ ACÁ TU URL /exec del Web App ***/
+    const API_URL = "https://script.google.com/macros/s/AKfycbxavgGWY0dQcLOsaVfqII0DkQb-Tb5kqKfhsx2hRBvpdTwS_jrp3g4XSUSC5X2XBxxo1w/exec"; // ej: https://script.google.com/macros/s/AKfyc.../exec
 
     const SHEETS = {
       GASTRONOMIA: {
-        gid: "1720586403",
         headers: ["NOMBRE","UBICACION","IG","PRECIOS","COMENTARIOS"],
         colWidths: ["20%","10%","12%","16%","42%"],
         segments: [
@@ -124,7 +71,6 @@
         ]
       },
       PLAYAS: {
-        gid: "1968374221",
         headers: ["NOMBRE","UBICACION","COMENTARIOS"],
         colWidths: ["28%","22%","50%"],
         segments: [
@@ -133,12 +79,9 @@
         ]
       },
       EXCURSIONES: {
-        gid: "222330063",
         headers: ["NOMBRE","UBICACION","COMENTARIOS"],
         colWidths: ["28%","22%","50%"],
-        segments: [
-          {title:"BARILOCHE", label:"BARILOCHE"}
-        ]
+        segments: [{title:"BARILOCHE", label:"BARILOCHE"}]
       }
     };
 
@@ -146,79 +89,132 @@
       .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
       .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 
-    /* ======== Carga con triple fallback: GViz -> PubHTML -> CSV ======== */
-
-    // 1) GViz (devuelve JSON; mantiene <a href> en cell.f)
-    async function fetchGViz(gid){
-      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${gid}&tqx=out:json`;
+    // --- Carga desde tu API (preserva <a href>) ---
+    async function loadViaApi(section){
+      const url = `${API_URL}?sheet=${encodeURIComponent(section)}`;
       const res = await fetch(url, {cache:"no-store"});
-      if (!res.ok) throw new Error("GViz HTTP " + res.status);
-      const txt = await res.text();
-      const json = JSON.parse(txt.replace(/^[^{]+/, "").replace(/;?}$/,""));
-      return json.table; // {cols, rows}
-    }
-    function gvizToRows(table){
-      return table.rows.map(r =>
-        (r.c || []).map(cell => {
-          const f = cell && cell.f;
-          const v = cell && cell.v;
-          if (f && /<a\s/i.test(f)) return f; // mantiene <a href="...">
-          if (typeof v === "string" && /^https?:\/\//i.test(v)) {
-            return `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a>`;
-          }
-          return esc(v==null?"":String(v));
-        })
-      );
+      if (!res.ok) throw new Error("API HTTP "+res.status);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      // Formato de salida: array de arrays con HTML dentro
+      const rows = data.rows;
+      const headers = data.headers && data.headers.length ? data.headers : SHEETS[section].headers;
+      return { rows, headers };
     }
 
-    // 2) PubHTML (requiere “Archivo → Publicar en la web”; preserva links)
-    async function fetchPubHTML(gid){
-      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pubhtml?gid=${gid}&single=true&widget=false&headers=false`;
-      const res = await fetch(url, {cache:"no-store"});
-      if (!res.ok) throw new Error("PubHTML HTTP " + res.status);
-      const html = await res.text();
-      // Parsear la primera tabla
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      const table = doc.querySelector("table");
-      if (!table) throw new Error("No table in pubhtml");
-      const rows = [];
-      table.querySelectorAll("tr").forEach(tr=>{
-        const r=[];
-        tr.querySelectorAll("td,th").forEach(td=>{
-          r.push(td.innerHTML.trim()); // mantiene <a href>
-        });
-        rows.push(r);
-      });
-      // filtrar filas vacías
-      return rows.filter(r => r.some(c => c && c.replace(/<[^>]+>/g,"").trim()!==""));
-    }
+    // --- Fallback CSV por si la API no estuviera publicada ---
+    const SHEET_ID = "1Kr3AIdE6fl8rVtv9lWRprLMOSYtxhcSUDkeFES9AyIw";
+    const GIDS = { GASTRONOMIA:"1720586403", PLAYAS:"1968374221", EXCURSIONES:"222330063" };
 
-    // 3) CSV (última opción; autolink de URLs visibles)
-    function parseCSV(text){
-      const rows=[]; let row=[], cell="", quote=false;
-      for(let i=0;i<text.length;i++){
-        const ch=text[i], nx=text[i+1];
-        if(quote){
-          if(ch==='"' && nx==='"'){ cell+='"'; i++; }
-          else if(ch==='"'){ quote=false; }
-          else { cell+=ch; }
-        }else{
-          if(ch==='"'){ quote=true; }
-          else if(ch===','){ row.push(cell); cell=""; }
-          else if(ch==='\n'){ row.push(cell); rows.push(row); row=[]; cell=""; }
-          else if(ch!=='\r'){ cell+=ch; }
-        }
+    function parseCSV(t){
+      const rows=[]; let row=[], cell="", q=false;
+      for(let i=0;i<t.length;i++){ const ch=t[i], nx=t[i+1];
+        if(q){ if(ch==='"'&&nx==='"'){cell+='"';i++;} else if(ch==='"'){q=false;} else cell+=ch; }
+        else { if(ch==='"') q=true; else if(ch===','){row.push(cell);cell="";} else if(ch==='\n'){row.push(cell);rows.push(row);row=[];cell="";} else if(ch!=='\r') cell+=ch; }
       }
       row.push(cell); if(row.length) rows.push(row);
       return rows.filter(r => r.some(c => String(c).trim()!==""));
     }
     function autoLinkVisibleUrls(rows){
-      return rows.map(r => r.map(c => {
-        const s = String(c||"");
-        if (/<a\s/i.test(s)) return s;
-        if (/^https?:\/\/\S+$/i.test(s)) {
-          return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
+      return rows.map(r => r.map(c => /^https?:\/\/\S+$/i.test(c) ? `<a href="${c}" target="_blank" rel="noopener">${c}</a>` : esc(c)));
+    }
+    async function loadViaCsv(section){
+      const gid = GIDS[section];
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+      const res = await fetch(url, {cache:"no-store"});
+      if (!res.ok) throw new Error("CSV HTTP "+res.status);
+      const text = await res.text();
+      const rows = autoLinkVisibleUrls(parseCSV(text));
+      return { rows, headers: SHEETS[section].headers };
+    }
+
+    // --- Segmentación / Render ---
+    function detectHeaderRow(rows, expected){
+      const wanted = expected.map(x=>x.toUpperCase());
+      for (let r=0;r<Math.min(rows.length,80);r++){
+        const up = rows[r].map(x=>String(x).replace(/<[^>]+>/g,"").trim().toUpperCase());
+        const hits = wanted.filter(w=>up.includes(w)).length;
+        const non = up.filter(x=>x!=="").length;
+        if (hits>=2 || (hits===0 && non>=3 && r>0)) return r;
+      }
+      return 0;
+    }
+    function isSegRow(cells, validTitles){
+      const set = validTitles.map(t=>t.toUpperCase());
+      let cnt=0,last=""; for(const c of cells){ const s=String(c).replace(/<[^>]+>/g,"").trim(); if(s){cnt++;last=s;} }
+      return (cnt===1 && set.includes(last.toUpperCase())) ? last : null;
+    }
+    const slug = s => s.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9\-]/g,"");
+    function buildButtons(section){
+      const btns = SHEETS[section].segments.map(seg=>`<button class="seg-btn" onclick="scrollToSeg('${slug(seg.title)}')">${esc(seg.label)}</button>`).join("");
+      return `<div class="seg-buttons">${btns}</div>`;
+    }
+    function makeTable(headers, rows, title, widths){
+      if (!rows.length) return "";
+      const colgroup = (widths && widths.length===headers.length) ? "<colgroup>"+widths.map(w=>`<col style="width:${w}">`).join("")+"</colgroup>" : "";
+      const thead = "<thead><tr>"+headers.map(h=>`<th>${esc(h)}</th>`).join("")+"</tr></thead>";
+      let tbody = "<tbody>";
+      for (const r of rows){
+        const rU = r.map(x=>String(x).replace(/<[^>]+>/g,"").trim().toUpperCase());
+        const hU = headers.map(x=>String(x).trim().toUpperCase());
+        let m=0; for(let i=0;i<Math.min(rU.length,hU.length);i++){ if(rU[i] && rU[i]===hU[i]) m++; }
+        if (m >= Math.max(3, Math.floor(hU.length*0.6))) continue;
+        tbody += "<tr>";
+        for (let j=0;j<headers.length;j++){
+          const label=esc(headers[j]||""); const html=r[j]||"";
+          tbody += `<td data-label="${label}">${html}</td>`;
         }
+        tbody += "</tr>";
+      }
+      tbody += "</tbody>";
+      const anchor = slug(title);
+      return `<div id="seg-${anchor}" class="segment-pill">${esc(title)}</div><table>${colgroup}${thead}${tbody}</table>`;
+    }
+    function buildSegmentedHTML(allRows, section){
+      const cfg = SHEETS[section], valid = cfg.segments.map(s=>s.title);
+      const headerRow = detectHeaderRow(allRows, cfg.headers);
+      const headers = allRows[headerRow].map(v=>String(v).replace(/<[^>]+>/g,"").trim());
+      let html = `<a class="back" onclick="showMenu()">← Volver al menú</a><h2>${esc(section)}</h2>${buildButtons(section)}<div class="search"><input id="searchInput" type="search" placeholder="Buscar en todas las tablas..." oninput="filterTable()"></div>`;
+      let currTitle=null, curr=[];
+      for(let r=0;r<headerRow;r++){ const maybe=isSegRow(allRows[r], valid); if(maybe) currTitle=maybe; }
+      for(let r=headerRow+1;r<allRows.length;r++){
+        const row=allRows[r];
+        if (row.every(c => String(c).replace(/<[^>]+>/g,"").trim()==="")) continue;
+        const maybe=isSegRow(row, valid);
+        if (maybe){ if (curr.length){ html+=makeTable(headers, curr, currTitle||valid[0], cfg.colWidths); curr=[]; } currTitle=maybe; continue; }
+        curr.push(row);
+      }
+      if (curr.length) html += makeTable(headers, curr, currTitle||valid[0], cfg.colWidths);
+      return html;
+    }
+
+    // --- UI / Router ---
+    function showMenu(){ document.getElementById("menu").style.display="block"; document.getElementById("content").innerHTML=""; history.replaceState(null,"",location.pathname+location.search); }
+    async function showSection(name){
+      document.getElementById("menu").style.display="none";
+      const cont=document.getElementById("content"); cont.innerHTML="Cargando…";
+      try{
+        const { rows, headers } = await loadViaApi(name);  // ✅ links preservados
+        cont.innerHTML = buildSegmentedHTML([headers, ...rows], name);
+      }catch(_){
+        try{
+          const { rows, headers } = await loadViaCsv(name); // último recurso
+          cont.innerHTML = buildSegmentedHTML([headers, ...rows], name);
+        }catch(e){
+          cont.innerHTML = `<p style="color:#b00020">No pude leer la hoja. Revisá que la API de Apps Script esté publicada (“Cualquiera”) y la URL /exec esté bien en <code>API_URL</code>.</p>`;
+        }
+      }
+    }
+    function filterTable(){ const f=(document.getElementById("searchInput")?.value||"").toLowerCase(); document.querySelectorAll("tbody tr").forEach(tr=>{ tr.style.display=tr.innerText.toLowerCase().includes(f)?"":"none"; }); }
+    window.scrollToSeg = sl => { const el=document.getElementById("seg-"+sl); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); };
+
+    window.addEventListener("hashchange", ()=>{ const h=location.hash.replace("#",""); if (SHEETS[h]) showSection(h); else showMenu(); });
+    window.addEventListener("load", ()=>{ const h=location.hash.replace("#",""); if (SHEETS[h]) showSection(h); else showMenu(); });
+
+    window.filterTable=filterTable; window.showMenu=showMenu;
+  </script>
+</body>
+</html>
         return esc(s);
       }));
     }
@@ -395,3 +391,4 @@
   </script>
 </body>
 </html>
+
